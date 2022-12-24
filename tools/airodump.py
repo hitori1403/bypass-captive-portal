@@ -1,31 +1,33 @@
-from subprocess import Popen, DEVNULL, STDOUT
-from shutil import rmtree
-from tempfile import mkdtemp
 import csv
-import os 
+import os
+from shutil import rmtree
+from subprocess import DEVNULL, STDOUT, Popen
+from tempfile import mkdtemp
 
-from .airmon import Airmon
 from model.client import Client
 from model.target import Target
 
+
 class Airodump:
-    def __init__(self, interface, essid_regex=''):
+    def __init__(self, interface, essid_regex=""):
         self.interface = interface
         self.essid_regex = essid_regex
         self.tmpdir = mkdtemp()
-        self.csv_filename = ''
+        self.csv_filename = ""
 
     def __enter__(self):
         cmd = [
-            'airodump-ng', 
+            "airodump-ng",
             self.interface,
-            '-a',
-            '-w', os.path.join(self.tmpdir, 'airodump'),
-            '--write-interval', '1'
+            "-a",
+            "-w",
+            os.path.join(self.tmpdir, "airodump"),
+            "--write-interval",
+            "1",
         ]
 
         if self.essid_regex:
-            cmd.extend(['-R', self.essid_regex])
+            cmd.extend(["-R", self.essid_regex])
 
         self.p = Popen(cmd, stdout=DEVNULL, stderr=STDOUT)
         return self
@@ -38,7 +40,7 @@ class Airodump:
         if not self.csv_filename:
             files = os.listdir(self.tmpdir)
             for f in files:
-                if f.endswith('.csv') and f.count('.') == 1:
+                if f.endswith(".csv") and f.count(".") == 1:
                     self.csv_filename = f
                     break
         return self.csv_filename
@@ -51,23 +53,23 @@ class Airodump:
         if not self.csv_filename:
             return
 
-        with open(os.path.join(self.tmpdir, self.csv_filename), 'r') as f:
+        with open(os.path.join(self.tmpdir, self.csv_filename), "r") as f:
             csv_reader = csv.reader(f, skipinitialspace=True)
-    
+
             hit_targets = False
             hit_clients = False
             for row in csv_reader:
                 try:
-                    if row[0] == 'BSSID':
+                    if row[0] == "BSSID":
                         hit_targets = True
                         continue
-                    elif row[0] == 'Station MAC':
+                    elif row[0] == "Station MAC":
                         hit_targets = False
                         hit_clients = True
                         continue
-                
+
                     if hit_targets:
-                        if row[5] == 'OPN':
+                        if row[5] == "OPN":
                             self.targets.append(Target(row))
                     elif hit_clients:
                         self.clients.append(Client(row))

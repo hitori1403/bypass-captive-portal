@@ -1,5 +1,6 @@
-from subprocess import Popen
 import time
+from subprocess import Popen
+
 
 class NetworkManager:
     @classmethod
@@ -7,21 +8,21 @@ class NetworkManager:
         while True:
             p = Popen(cmd)
             p.wait()
-            
+
             if p.returncode:
-                print('[!] Rerun NetworkManager after 5s...')
+                print("[!] Rerun NetworkManager after 5s...")
                 time.sleep(5)
             else:
                 break
 
     @classmethod
     def start(cls):
-        cls.run(['systemctl', 'start', 'NetworkManager'])
-    
+        cls.run(["systemctl", "start", "NetworkManager"])
+
     @classmethod
     def stop(cls):
-        cls.run(['systemctl', 'stop', 'NetworkManager'])
+        cls.run(["systemctl", "stop", "NetworkManager"])
 
     @classmethod
     def connect2wifi(cls, ssid):
-        cls.run(['nmcli', 'd', 'wifi', 'connect', ssid])
+        cls.run(["nmcli", "d", "wifi", "connect", ssid])
