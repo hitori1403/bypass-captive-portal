@@ -1,4 +1,4 @@
-from subprocess import Popen
+from subprocess import DEVNULL, Popen
 
 from .ip import Ip
 from .networkmanager import NetworkManager
@@ -13,7 +13,7 @@ class Macchanger:
         Ip(self.interface).down()
 
         self.cmd = ["macchanger"] + options + [self.interface]
-        p = Popen(self.cmd + options)
+        p = Popen(self.cmd + options, stdout=DEVNULL)
         p.wait()
 
         Ip(self.interface).up()

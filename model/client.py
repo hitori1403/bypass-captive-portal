@@ -9,4 +9,4 @@ class Client:
         self.packets = int(fields[4])
         self.bssid = fields[5]
         self.probed_essids = fields[6]
-
+        self.essid = None

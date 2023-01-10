@@ -1,16 +1,19 @@
 import time
-from subprocess import Popen
+from subprocess import PIPE, Popen, DEVNULL
+
+from pwn import log
 
 
 class NetworkManager:
     @classmethod
     def run(cls, cmd):
         while True:
-            p = Popen(cmd)
+            p = Popen(cmd, stdout=DEVNULL, stderr=PIPE)
             p.wait()
 
             if p.returncode:
-                print("[!] Rerun NetworkManager after 5s...")
+                log.warn(p.stderr)
+                log.warn("Rerun NetworkManager after 5s...")
                 time.sleep(5)
             else:
                 break

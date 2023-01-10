@@ -1,11 +1,11 @@
-from subprocess import Popen
+from subprocess import DEVNULL, Popen
 
 
 class Airmon:
     @classmethod
     def run(cls, options):
         cmd = ["airmon-ng"] + options
-        p = Popen(cmd)
+        p = Popen(cmd, stdout=DEVNULL)
         p.wait()
 
     @classmethod
