@@ -1,5 +1,5 @@
 import time
-from subprocess import PIPE, Popen, DEVNULL
+from subprocess import DEVNULL, PIPE, Popen
 
 from pwn import log
 
@@ -12,7 +12,7 @@ class NetworkManager:
             p.wait()
 
             if p.returncode:
-                log.warn(p.stderr)
+                log.warn(p.stderr.read().decode())
                 log.warn("Rerun NetworkManager after 5s...")
                 time.sleep(5)
             else:
