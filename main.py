@@ -32,28 +32,36 @@ def get_clients():
     with Airodump(moninterf, essid_regex=network.name) as airodump:
         try:
             while True:
-                print("BSSID\t\t\t\tPrivacy\tPWR\tBeacons\tESSID")
-
                 targets = airodump.get_targets()
-                for t in targets:
-                    print(
-                        f"{t.bssid}\t{t.privacy}\t\t{t.power}\t{t.beacons}\t\t{t.essid}"
-                    )
-
-                print("\n\nBSSID\t\t\t\tSTATION\t\t\tPWR\tPackets\tProbed ESSIDs")
-
-                all_clients = airodump.get_clients()
                 real_clients = []
 
-                for c in all_clients:
+                for c in airodump.get_clients():
                     for t in targets:
                         if c.bssid == t.bssid:
                             c.essid = t.essid
                             real_clients.append(c)
 
+                print(
+                    "{:<20} {:<10} {:<10} {:<10} {:<20}".format(
+                        "BSSID", "Privacy", "PWR", "Beacons", "ESSID"
+                    )
+                )
+                for t in targets:
+                    print(
+                        "{:<20} {:<10} {:<10} {:<10} {:<20}".format(
+                            t.bssid, t.privacy, t.power, t.beacons, t.essid
+                        )
+                    )
+                print(
+                    "\n{:<20} {:<20} {:<10} {:<10} {:<20}".format(
+                        "BSSID", "STATION", "PWR", "Packets", "Probed ESSIDs"
+                    )
+                )
                 for c in real_clients:
                     print(
-                        f"{c.bssid}\t{c.station}\t{c.power}\t{c.packets}\t\t{c.probed_essids}"
+                        "{:<20} {:<20} {:<10} {:<10} {:<20}".format(
+                            c.bssid, c.station, c.power, c.packets, c.probed_essids
+                        )
                     )
 
                 time.sleep(1)
