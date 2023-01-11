@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-
 import os
 import time
 
@@ -8,6 +7,7 @@ from pwn import log, success
 from model.isp.campusvnu import CampusVNU
 from tools.airmon import Airmon
 from tools.airodump import Airodump
+from tools.ip import Ip
 
 
 def checkroot():
@@ -15,10 +15,27 @@ def checkroot():
         log.error("Run script as root!")
 
 
-# TODO: add menu to select interfaces
 def select_interface():
-    global interface
-    interface = "wlp5s0"
+    while True:
+        os.system("clear")
+        try:
+            interfaces = Ip.get_interfaces()
+
+            msg = "Select your interface: "
+            for i in range(len(interfaces)):
+                msg += f"\n[{i}] {interfaces[i].decode()}"
+
+            log.info(msg)
+            choice = int(input("Choice: "))
+
+            global interface
+            interface = interfaces[choice].decode()
+
+            break
+        except (IndexError, ValueError):
+            print("Invalid choice!")
+
+        time.sleep(1)
 
 
 # TODO: add menu selector

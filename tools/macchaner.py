@@ -10,13 +10,13 @@ class Macchanger:
 
     def run(self, options):
         NetworkManager.stop()
-        Ip(self.interface).down()
+        Ip.down(self.interface)
 
         self.cmd = ["macchanger"] + options + [self.interface]
         p = Popen(self.cmd + options, stdout=DEVNULL)
         p.wait()
 
-        Ip(self.interface).up()
+        Ip.up(self.interface)
         NetworkManager.start()
 
     def random(self):

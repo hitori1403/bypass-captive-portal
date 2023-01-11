@@ -1,17 +1,24 @@
-from subprocess import Popen
+import re
+from subprocess import PIPE, Popen
 
 
 class Ip:
-    def __init__(self, interface):
-        self.interface = interface
-
-    def run(self, options):
-        cmd = ["ip", "link", "set", "dev", self.interface] + options
-        p = Popen(cmd)
+    @classmethod
+    def run(cls, options):
+        cmd = ["ip"] + options
+        p = Popen(cmd, stdout=PIPE)
         p.wait()
+        return p.communicate()
 
-    def up(self):
-        self.run(["up"])
+    @classmethod
+    def up(cls, interface):
+        cls.run(["link", "set", "dev", interface, "up"])
 
-    def down(self):
-        self.run(["down"])
+    @classmethod
+    def down(cls, interface):
+        cls.run(["link", "set", "dev", interface, "down"])
+
+    @classmethod
+    def get_interfaces(cls):
+        out = cls.run(["link", "show"])[0]
+        return re.findall(b": (.*):", out)
