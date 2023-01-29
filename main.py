@@ -33,7 +33,7 @@ def select_interface():
 
             break
         except (IndexError, ValueError):
-            print("Invalid choice!")
+            log.warn("Invalid choice!")
 
         time.sleep(1)
 
@@ -49,6 +49,8 @@ def get_clients():
     with Airodump(moninterf, essid_regex=network.name) as airodump:
         try:
             while True:
+                os.system("clear")
+
                 targets = airodump.get_targets()
                 real_clients = []
 
@@ -82,7 +84,6 @@ def get_clients():
                     )
 
                 time.sleep(1)
-                os.system("clear")
         except KeyboardInterrupt:
             global clients
             clients = real_clients
@@ -110,18 +111,18 @@ def get_creddentials():
 # TODO: print list of accounts with etr and bandwidth
 def hijack():
     for s in sessions:
-        log.info("Stealing session...")
+        p = log.progress("Stealing session")
         s.print_info()
 
-        log.info("Logging out...")
+        p.status("Logging out")
         s.logout()
 
         s.reset_mac()
 
-        log.info("Logging in...")
+        p.status("Logging in")
         s.login()
 
-        success("Session stolen successfully!")
+        p.success("Session stolen successfully!")
         break
 
 
@@ -134,4 +135,4 @@ if __name__ == "__main__":
     select_network()
     get_clients()
     get_creddentials()
-    hijack()
+    # hijack()

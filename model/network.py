@@ -36,24 +36,24 @@ class Network(ABC):
             yield s
 
     def spoof(self, interface):
-        log.info("Spoofing client...")
-        self.interface = interface
         mac = next(self.get_station)
+        p = log.progress(f"Spoof client {mac}")
+        self.interface = interface
 
-        log.info(f"Changing current MAC to {mac}...")
+        p.status("Changing MAC")
         macchanger = Macchanger(interface)
         macchanger.change(mac)
 
-        log.info("Sleeping 5s...")
+        p.status("Sleeping 5s")
         time.sleep(5)
 
-        log.info(f'Connecting to Wi-Fi "{self.essid}"...')
+        p.status(f'Connecting to Wi-Fi "{self.essid}"')
         NetworkManager.connect2wifi(self.essid)
 
-        log.info("Spoofed successfully!")
+        p.success("Spoofed successfully!")
 
     def reset_mac(self):
-        log.info("Reseting MAC...")
+        p = log.progress("Reset MAC")
 
         if not self.interface:
             log.error("Interface not found!")
@@ -61,24 +61,26 @@ class Network(ABC):
             macchanger = Macchanger(self.interface)
             macchanger.reset()
 
-            log.info(f'Connecting to Wi-Fi "{self.essid}"...')
+            p.status(f"Connecting to Wi-Fi '{self.essid}'")
             NetworkManager.connect2wifi(self.essid)
 
-            log.info("Reset successfully!")
+            p.success("Reset successfully!")
 
     def print_info(self):
         if not self.username and not self.password:
             log.warn("No info!")
             return
+        msg = ""
         if self.username:
-            success(f"Username: {self.username}")
+            msg += f"Username: {self.username}\n"
         if self.password:
-            success(f"Password: {self.password}")
+            msg += f"Password: {self.password}\n"
         if self.etr:
-            success(f"Time remaining: {self.etr}")
+            msg += f"Time remaining: {self.etr}\n"
+        success(msg)
 
     def store(self):
-        log.info("Saving session...")
+        p = log.progress("Save session")
 
         os.makedirs("sessions", exist_ok=True)
         sessions = {}
@@ -86,7 +88,7 @@ class Network(ABC):
         try:
             with open(f"sessions/{self.name}.json", "r") as f:
                 sessions = json.load(f)
-        except:
+        except Exception:
             pass
 
         if self.username in sessions:
@@ -102,4 +104,4 @@ class Network(ABC):
         with open(f"sessions/{self.name}.json", "w") as f:
             json.dump(sessions, f, indent=2)
 
-        log.info("Session saved!")
+        p.success("Session saved!")
