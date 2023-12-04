@@ -1,2 +1,3 @@
-# a-wireless-tool
-Perform session hijacking on capative portal
+# Bypass capative portal
+
+Perform session hijacking on capative portal in VNUHCM dormitory's network.
