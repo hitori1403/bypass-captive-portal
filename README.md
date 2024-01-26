@@ -5,4 +5,4 @@ Using the [Aircrack-ng](https://github.com/aircrack-ng/aircrack-ng) toolset and 
 
 Current status:  
 - [x] Campus VNU (Fully hijack and leak the secret password)  
-- [!] MANG DAY KTX (Only gaining access to the network by faking the MAC address, due to the provider hiding the secret password)
+- [ ] MANG DAY KTX (Only gaining access to the network by faking the MAC address, due to the provider hiding the secret password)
